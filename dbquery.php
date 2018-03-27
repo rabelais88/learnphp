@@ -11,10 +11,21 @@
   }
 </style>
 <div>
-  <h1>PHP MYSQL DB load sample</h1>
-  <a href="dbquery.php">try query</a>
+  <h1>PHP MYSQL custom query sample</h1>
 </div>
+<form>
 
+  <div>
+    <select name="direction">
+      <option value="above">above</option>
+      <option value="below">below</option>
+      <option value="all">all ages</option>
+    </select>
+    <label for="age">age</label>
+    <input type="number" name="age" />
+  </div>
+  <input type="submit" value="search">
+</form>
 <?php
 
 $user = 'phpdev';
@@ -24,6 +35,20 @@ $dbname = 'learnphp';
 $host= 'localhost';
 
 $dsn = "mysql:host={$host};dbname={$dbname};charset=utf8";
+
+$query = "SELECT * FROM member";
+
+if(isset($_GET["age"])){
+  if($_GET["direction"] === "above"){
+    $query .= " WHERE age >= " . (String)$_GET["age"];
+  }elseif($_GET["direction"] === "below"){
+    $query .= " WHERE age <= " . (String)$_GET["age"];
+  }
+}
+
+$query .= ";";
+echo $query;
+
 try{
   //db connection
   $pdo = new PDO($dsn,$user,$pw);
@@ -32,7 +57,7 @@ try{
   echo "connected to database";
   //basically search, insert and delete bare almost no difference
   //other than just SQL query statement
-  $query = "SELECT * FROM member";
+
   $stm = $pdo->prepare($query);
   $stm->execute();
   $res = $stm->fetchAll(PDO::FETCH_ASSOC);
@@ -68,48 +93,5 @@ HTML;
   echo '<span class="error">error!</span></br>';
   echo $e->getMessage();
   exit();
-}
-?>
-
-<form method="POST" action="/learnphp/dbaccess.php">
-  <h2>add new item</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>name</th>
-        <th>age</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><input type="text" name="name"></td>
-        <td><input type="number" name="age"></td>
-      </tr>
-    </tbody>
-  </table>
-  <input type="submit" value="add this item">
-</form>
-
-<?php
-if(isset($_POST['name']) && isset($_POST['age'])){
-
-  try{
-
-    $name = $_POST["name"];
-    $age = $_POST["age"];
-    $query = "INSERT INTO member (name, age) VALUES ( :name , :age );";
-    $stm = $pdo->prepare($query);
-    $stm->bindValue( ':name', $name, PDO::PARAM_STR);
-    $stm->bindValue( ':age', $age, PDO::PARAM_INT);
-
-    if($stm->execute()){
-      echo "new member is added";
-      header('Location: dbaccess.php'); 
-    }
-  }catch(Exception $e){
-    echo '<span class="error">error!</span></br>';
-    echo $e->getMessage();
-    exit();
-  }    
 }
 ?>
